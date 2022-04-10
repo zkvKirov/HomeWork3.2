@@ -7,6 +7,7 @@ object NoteService {
     private val createdNotes = mutableListOf<Note>()
     private val createdComments = mutableListOf<Comment>()
     private val deletedComments = mutableListOf<Comment>()
+    private val list = mutableListOf<Note>()
     private var nID: Int = -1
     private var cID: Int = -1
 
@@ -23,8 +24,9 @@ object NoteService {
                 cID++
                 val newComment = comment.copy(id = cID)
                 comments.add(cID, newComment)
+                val countComments = note.copy(comments = note.comments + 1)
+                notes[note.id] = countComments
             } else {
-                println("Вы не можете оставлять комментарии к этой заметке")
                 throw NoteNotFoundException ("Заметка с ID = ${comment.noteID} не найдена")
             }
         }
@@ -32,82 +34,93 @@ object NoteService {
     }
 
     fun deleteNote (noteID: Int): Boolean {
-        for (note in notes) {
-            if (note.id == noteID) {
-                notes.remove(note)
-                getComments(noteID, true)
-                for (comment in createdComments) {
-                    deleteComment(comment.id)
+        if (noteID > notes.size - 1 || noteID < 0) {
+            throw NoteNotFoundException ("Заметка с ID = $noteID не найдена")
+        } else {
+            for (note in notes) {
+                if (note.id == noteID) {
+                    notes.remove(note)
+                    getComments(noteID, true)
+                    for (comment in createdComments) {
+                        deleteComment(comment.id)
+                    }
                 }
-            } else {
-                throw NoteNotFoundException ("Заметка с ID = $noteID не найдена")
+                return true
             }
         }
-        return true
+        return false
     }
 
     fun deleteComment (commentID: Int) : Boolean {
-        for (comment in comments) {
-            if (comment.id == commentID) {
-                comments.remove(comment)
-                deletedComments.add(comment)
-            } else {
-                throw AccessToCommentDeniedException ("Комментария с ID = $commentID не существует")
+        if (commentID > comments.size - 1 || commentID < 0) {
+            throw AccessToCommentDeniedException ("Комментария с ID = $commentID не существует")
+        } else {
+            for (comment in comments) {
+                if (comment.id == commentID) {
+                    comments.remove(comment)
+                    deletedComments.add(comment)
+                }
+                return true
             }
         }
-        return true
+        return false
     }
 
     fun editNote (note: Note): Boolean {
-        for (n in notes) {
-            if (n.id == note.id) {
-                notes[nID] = n.copy(
-                    title = note.title,
-                    text = note.text
-                )
-            } else {
-                throw NoteNotFoundException ("Заметка с ID = ${note.id} не найдена")
+        if (note.id > notes.size - 1 || note.id < 0) {
+            throw NoteNotFoundException ("Заметка с ID = ${note.id} не найдена")
+        } else {
+            for (n in notes) {
+                if (n.id == note.id) {
+                    notes[n.id] = n.copy(
+                        title = note.title,
+                        text = note.text
+                    )
+                }
+                return true
             }
         }
-        return true
+        return false
     }
 
     fun editComment (comment: Comment) : Boolean {
-        for (c in comments) {
-            if (c.noteID == comment.noteID) {
-                comments[cID] = c.copy(
-                    message = comment.message
-                )
-            } else {
-                throw AccessToCommentDeniedException ("Доступ к комментарию $cID отсутствует")
+        if (comment.id > comments.size - 1 || comment.id < 0) {
+            throw AccessToCommentDeniedException ("Комментария с ID = ${comment.id} не существует")
+        } else {
+            for (c in comments) {
+                if (c.noteID == comment.noteID) {
+                    comments[c.id] = c.copy(
+                        message = comment.message
+                    )
+                }
+                return true
             }
         }
-        return true
+        return false
     }
 
     fun getNotes (vararg noteIDs: Int, sort: Boolean): MutableList<Note> {
         for (note in notes) {
             if (noteIDs.contains(note.id)) {
                 createdNotes.add(note)
-            } else {
-                throw NoteNotFoundException ("Заметка с ID = ${note.id} не найдена")
             }
             if (!sort) {
-                createdNotes.sortByDescending {note.id}
+                createdNotes.sortByDescending {it.id}
             } else {
-                createdNotes.sortBy {note.id}
+                createdNotes.sortBy {it.id}
             }
         }
         return createdNotes
     }
 
     fun getNoteByID (noteID: Int): MutableList<Note> {
-        val list = mutableListOf<Note>()
-        for (note in notes) {
-            if (note.id == noteID) {
-                list.add(note)
-            } else {
-                throw NoteNotFoundException ("Заметка с ID = $noteID не найдена")
+        if (noteID > notes.size - 1 || noteID < 0) {
+            throw NoteNotFoundException ("Заметка с ID = $noteID не найдена")
+        } else {
+            for (note in notes) {
+                if (note.id == noteID) {
+                    list.add(note)
+                }
             }
         }
         return list
@@ -117,27 +130,38 @@ object NoteService {
         for (comment in comments) {
             if (comment.noteID == noteID) {
                 createdComments.add(comment)
-            } else {
-                throw NoteNotFoundException ("Заметка с ID = $noteID не найдена")
             }
             if (!sort) {
-                createdComments.sortByDescending {comment.id}
+                createdComments.sortByDescending {it.id}
             } else {
-                createdComments.sortBy {comment.id}
+                createdComments.sortBy {it.id}
             }
         }
         return createdComments
     }
 
     fun restoreComment (commentID: Int) : Boolean {
-        for (comment in deletedComments) {
-            if (comment.id == commentID) {
-                deletedComments.remove(comment)
-                comments.add(comment.id, comment)
-            } else {
-                throw AccessToCommentDeniedException ("Комментария с ID = $commentID не существует")
+        if (commentID > comments.size - 1 || commentID < 0) {
+            throw AccessToCommentDeniedException ("Комментария с ID = $commentID не существует")
+        } else {
+            for (comment in deletedComments) {
+                if (comment.id == commentID) {
+                    deletedComments.remove(comment)
+                    comments.add(comment.id, comment)
+                    return true
+                }
             }
         }
-        return true
+        throw AccessToCommentDeniedException ("Комментарий с ID = $commentID в списке удалённых отсутствует")
+    }
+
+    fun removeAll () {
+        notes.clear()
+        comments.clear()
+        createdNotes.clear()
+        createdComments.clear()
+        deletedComments.clear()
+        nID = -1
+        cID = -1
     }
 }
