@@ -44,8 +44,8 @@ object NoteService {
                     for (comment in createdComments) {
                         deleteComment(comment.id)
                     }
+                    return true
                 }
-                return true
             }
         }
         return false
@@ -59,8 +59,8 @@ object NoteService {
                 if (comment.id == commentID) {
                     comments.remove(comment)
                     deletedComments.add(comment)
+                    return true
                 }
-                return true
             }
         }
         return false
