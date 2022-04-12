@@ -19,15 +19,17 @@ object NoteService {
     }
 
     fun createComment (comment: Comment) : Int {
-        for (note in notes) {
-            if (note.id == comment.noteID) {
-                cID++
-                val newComment = comment.copy(id = cID)
-                comments.add(cID, newComment)
-                val countComments = note.copy(comments = note.comments + 1)
-                notes[note.id] = countComments
-            } else {
-                throw NoteNotFoundException ("Заметка с ID = ${comment.noteID} не найдена")
+        if (comment.noteID > notes.size - 1 || comment.noteID < 0) {
+            throw NoteNotFoundException ("Заметка с ID = ${comment.noteID} не найдена")
+        } else {
+            for (note in notes) {
+                if (note.id == comment.noteID) {
+                    cID++
+                    val newComment = comment.copy(id = cID)
+                    comments.add(cID, newComment)
+                    val countComments = note.copy(comments = note.comments + 1)
+                    notes[note.id] = countComments
+                }
             }
         }
         return cID
@@ -39,11 +41,12 @@ object NoteService {
         } else {
             for (note in notes) {
                 if (note.id == noteID) {
-                    notes.remove(note)
-                    getComments(noteID, true)
-                    for (comment in createdComments) {
-                        deleteComment(comment.id)
+                    for (comment in comments) {
+                        if (comment.noteID == noteID) {
+                            deleteComment(comment.id)
+                        }
                     }
+                    notes[note.id] = Note(-1,"Заметка удалена", "")
                     return true
                 }
             }
@@ -57,7 +60,7 @@ object NoteService {
         } else {
             for (comment in comments) {
                 if (comment.id == commentID) {
-                    comments.remove(comment)
+                    comments[comment.id] = Comment(-1, -1, -1, "Комментарий удалён")
                     deletedComments.add(comment)
                     return true
                 }
@@ -152,7 +155,7 @@ object NoteService {
                 }
             }
         }
-        throw AccessToCommentDeniedException ("Комментарий с ID = $commentID в списке удалённых отсутствует")
+        return false
     }
 
     fun removeAll () {

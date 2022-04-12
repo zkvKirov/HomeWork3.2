@@ -28,9 +28,9 @@ class NoteServiceTest {
 
     @Test
     fun createComment() {
-        val note = Note(0, "Заметка", "Не забыть!")
-        NoteService.addNote(note)
-        val comment = Comment(noteID = 0, replyTo = 666, message = "Что надо не забыть?")
+        NoteService.addNote(Note(0, "Заметка", "Не забыть!"))
+        NoteService.addNote(Note(0, "Список покупок", "Молоко, хлеб"))
+        val comment = Comment(noteID = 1, replyTo = 666, message = "Что надо не забыть?")
         val expectedID = 0
         val actualID = NoteService.createComment(comment)
         assertEquals(expectedID, actualID)
@@ -48,6 +48,11 @@ class NoteServiceTest {
     fun deleteNote() {
         NoteService.addNote(Note(0, "Заметка", "Не забыть!"))
         NoteService.addNote(Note(0, "Список покупок", "Молоко, хлеб"))
+        NoteService.addNote(Note(0, "Список покупок 2", "Молоко, хлеб и колбасу"))
+        NoteService.createComment(Comment(noteID = 1, replyTo = 666, message = "Что надо не забыть?"))
+        NoteService.createComment(Comment(noteID = 0, replyTo = 444, message = "Все равно забудешь!"))
+        NoteService.createComment(Comment(noteID = 1, replyTo = 555, message = "Так себе заметка"))
+        NoteService.createComment(Comment(noteID = 0, replyTo = 777, message = "Комментарий"))
         val result = NoteService.deleteNote(1)
         assertTrue(result)
     }
@@ -63,7 +68,7 @@ class NoteServiceTest {
     fun deleteComment() {
         NoteService.addNote(Note(0, "Заметка", "Не забыть!"))
         NoteService.createComment(Comment(noteID = 0, replyTo = 666, message = "Что надо не забыть?"))
-        NoteService.createComment(Comment(noteID = 0, replyTo = 555, message = "Так себе заметка"))
+        NoteService.createComment(Comment(noteID = 0, replyTo = 444, message = "Все равно забудешь!"))
         val result = NoteService.deleteComment(1)
         assertTrue(result)
     }
@@ -169,7 +174,7 @@ class NoteServiceTest {
     }
 
     @Test (expected = AccessToCommentDeniedException::class)
-    fun restoreCommentExceptionInStart() {
+    fun restoreCommentException() {
         NoteService.addNote(Note(0, "Заметка", "Не забыть!"))
         NoteService.createComment(Comment(noteID = 0, replyTo = 666, message = "Что надо не забыть?"))
         NoteService.createComment(Comment(noteID = 0, replyTo = 555, message = "Так себе заметка"))
@@ -178,13 +183,4 @@ class NoteServiceTest {
         NoteService.restoreComment(5)
     }
 
-    @Test (expected = AccessToCommentDeniedException::class)
-    fun restoreCommentExceptionInEnd() {
-        NoteService.addNote(Note(0, "Заметка", "Не забыть!"))
-        NoteService.createComment(Comment(noteID = 0, replyTo = 666, message = "Что надо не забыть?"))
-        NoteService.createComment(Comment(noteID = 0, replyTo = 555, message = "Так себе заметка"))
-        NoteService.createComment(Comment(noteID = 0, replyTo = 444, message = "Все равно забудешь!"))
-        NoteService.deleteComment(2)
-        NoteService.restoreComment(1)
-    }
 }
